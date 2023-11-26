@@ -4,14 +4,11 @@ import { useInView } from 'react-intersection-observer';
 import {
   useGetSearchPostsQuery,
   useGetInfinitePostsQuery,
-  useGetUsersQuery,
 } from '@/lib/react-query/queriesAndMutations';
 import SearchResults from '@/components/shared/SearchResults';
 import useDebounce from '@/hooks/useDebounce';
 import { Loader } from 'lucide-react';
 import { GridPostList } from '@/components/shared';
-import { useUserContext } from '@/hooks/useUserContext';
-import UserCard from '@/components/shared/UserCard';
 
 const Explore = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -24,11 +21,7 @@ const Explore = () => {
     hasNextPage,
     fetchNextPage,
   } = useGetInfinitePostsQuery();
-  const { user } = useUserContext();
-  const { data: users, isLoading: isUsersLoading } = useGetUsersQuery(
-    user.id,
-    5
-  );
+
   useEffect(() => {
     if (inView && !searchTerm) {
       fetchNextPage();
@@ -49,80 +42,62 @@ const Explore = () => {
   console.log(shouldShowPosts);
 
   return (
-    <div className='flex flex-1'>
-      <div className='flex flex-col items-center max-w-5xl overflow-scroll custom-scrollbar px-5 py-10 md:p-14 w-full'>
-        <div className='flex flex-col gap-6 md:gap-9 w-full items-center'>
-          <h3 className='font-bold text-[24px] text-light-1'>Search Posts</h3>
-          <div className='flex gap-1 items-center px-4 w-full bg-dark-4 rounded-lg'>
-            <img
-              src='/assets/icons/search.svg'
-              alt='Search'
-              className='w-6 h-6'
-            />
-            <Input
-              type='text'
-              placeholder='Search'
-              className='bg-dark-4 h-12 border-none placeholder:text-light-1 focus-visible:ring-0 focus-visible:ring-offset-0 ring-offset-0'
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
+    <div className='flex flex-col items-center overflow-scroll custom-scrollbar px-5 py-10 md:p-14 w-full'>
+      <div className='flex flex-col gap-6 md:gap-9 w-full items-center'>
+        <h3 className='font-bold text-[24px] text-light-1'>Search Posts</h3>
+        <div className='flex gap-1 items-center px-4 w-full bg-dark-4 rounded-lg'>
+          <img
+            src='/assets/icons/search.svg'
+            alt='Search'
+            className='w-6 h-6'
+          />
+          <Input
+            type='text'
+            placeholder='Search'
+            className='bg-dark-4 h-12 border-none placeholder:text-light-1 focus-visible:ring-0 focus-visible:ring-offset-0 ring-offset-0'
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </div>
-        <div className='w-full flex justify-between items-center mt-16 mb-7'>
-          <h3 className='font-bold text-[20px] md:text-[24px] text-light-1'>
-            Popular Today
-          </h3>
-          <div className='flex gap-3 cursor-pointer items-center px-4 bg-dark-3 rounded-xl py-2'>
-            <p className='text-sm text-light-2'>All</p>
-            <img
-              src='/assets/icons/filter.svg'
-              alt='Filter'
-              className='w-5 h-5'
-            />
-          </div>
+      </div>
+      <div className='w-full flex justify-between items-center mt-16 mb-7'>
+        <h3 className='font-bold text-[20px] md:text-[24px] text-light-1'>
+          Popular Today
+        </h3>
+        <div className='flex gap-3 cursor-pointer items-center px-4 bg-dark-3 rounded-xl py-2'>
+          <p className='text-sm text-light-2'>All</p>
+          <img
+            src='/assets/icons/filter.svg'
+            alt='Filter'
+            className='w-5 h-5'
+          />
         </div>
-        <div className='flex flex-wrap gap-9 w-full'>
-          {shouldShowSearchResults ? (
-            <SearchResults
-              isSearchFetching={isFetchingSearch}
-              searchedPosts={searchedPosts}
+      </div>
+      <div className='flex flex-wrap gap-9 w-full'>
+        {shouldShowSearchResults ? (
+          <SearchResults
+            isSearchFetching={isFetchingSearch}
+            searchedPosts={searchedPosts}
+          />
+        ) : shouldShowPosts ? (
+          <p className='text-light-4 mt-10 w-full text-center'>End of posts</p>
+        ) : (
+          posts.pages.map((item, index) => (
+            <GridPostList
+              posts={item.documents}
+              key={index}
+              // showStats={false}
             />
-          ) : shouldShowPosts ? (
-            <p className='text-light-4 mt-10 w-full text-center'>
-              End of posts
-            </p>
-          ) : (
-            posts.pages.map((item, index) => (
-              <GridPostList
-                posts={item.documents}
-                key={index}
-                // showStats={false}
-              />
-            ))
-          )}
-        </div>
-
-        {hasNextPage && !searchTerm && (
-          <div
-            className='w-full flex items-center justify-center mt-10'
-            ref={ref}
-          >
-            <Loader />
-          </div>
+          ))
         )}
       </div>
-      {isUsersLoading ? (
-        <Loader />
-      ) : (
-        <div className='hidden xl:flex h-full w-72 2xl:w-465 px-6 py-10 flex-col gap-10 overflow-scroll custom-scrollbar'>
-          <h3 className='font-bold text-[24px] lg:text[30px] text-light-1'>
-            Top Creators
-          </h3>
-          <div className='grid 2xl:grid-cols-2 gap-6'>
-            {users?.documents.map((user) => (
-              <UserCard user={user} key={user.$id} />
-            ))}
-          </div>
+
+      {hasNextPage && !searchTerm && (
+        <div
+          className='w-full flex items-center justify-center mt-10'
+          ref={ref}
+        >
+          <Loader />
         </div>
       )}
     </div>
